@@ -1,5 +1,6 @@
 (ns functional-programming.cet-analyser)
 
+; Declared so can be easily referred back to from any function
 (declare load-menu)
 
 ;; Prints the menu to console with a nicely formatted title for this program.
@@ -11,7 +12,7 @@
 |___ |___  |     |  | | \\| |  | |___   |   ___] |___ |  \\     |  |__| |__| |___"
 
             ; The CET Analyser Tool main menu with options
-            "\n\nPlease select an option: \n\n"
+            "\n\n\nPlease select an option: \n\n"
             "0) Back to Main Menu\n"
             "1) ASCII to Morse-Code\n"
             "2) Morse-Code to ASCII\n\n")))
@@ -22,7 +23,7 @@
 (defn morse-to-ascii
   [])
 
-
+;; The main menu for the CET section
 (defn handle-main-menu-choice [user-input]
   (cond
     (= user-input "0") (println "Returning to Main Menu... \n") ; returns to core / main-menu
