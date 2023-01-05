@@ -41,11 +41,10 @@
 ;; Recursive function for converting an ascii sequence into morse-code
 (defn convert-to-morse
   [ascii-seq converted]
-
-  ; If the char to convert = terminating-char (~) return converted (conversion finished)
-  (if (= terminating-char (first ascii-seq)) ; Base Case
-    converted
-    ; If it's a space, don't bother mapping, just apply the space along with the character spacing
+  ;; Base Case
+  ;; If the char to convert = terminating-char (@) return converted (conversion finished)
+  (if (= terminating-char (first ascii-seq))
+    (str/trim converted)
     (if (= \space (first ascii-seq))
       (convert-to-morse (rest ascii-seq) (str converted " " morse-char-spacing))
       ; Recursively call the function with the rest of the ascii-seq and the converted char, and the character spacing
@@ -66,14 +65,16 @@
 
 (defn convert-to-ascii
   [morse-seq converted]
-  (if (= (str terminating-char) (first morse-seq)) ; Base Case
-    converted
-    (if (empty? (first morse-seq))
-      (convert-to-ascii (rest morse-seq) (str converted " "))
+  ;; Base Case
+  ;; If the str to convert = terminating-char (@) return converted (conversion finished)
+  (if (= (str terminating-char) (first morse-seq))
+    (str/trim converted)
+    (if (empty? (first morse-seq)) ; If its emtpy, it's a gap between words, not characters, so just add a space to the converted string.
+      (convert-to-ascii (rest morse-seq) (str converted " ")) ; Recall recursively with amended converted string and morse-seq.
       ; Lookup the key for the corresponding current iteration first morse-code value... Then recall recursively.
       (convert-to-ascii (rest morse-seq) (str converted (first (for [[k v] ascii-morse-map :when (= v (str/trim (first morse-seq)))] k)))))))
 
-;; SPEC - convert-to-morse function
+;; SPEC - convert-to-ascii function
 (s/fdef convert-to-ascii
   :args (s/cat :ascii-seq seq?  :converted string?)
   :ret string?)
