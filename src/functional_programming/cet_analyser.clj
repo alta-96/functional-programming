@@ -50,54 +50,85 @@
 ;; returns: string (date of warmest day along with temperature)
 (defn get-warmest-day-by-month
   [month]
-  (month (map-record (first cet-data-map-row-seq))))
+  (loop [data cet-data-map-row-seq ; CET data in seq of rows
+         current-max (map-record (first cet-data-map-row-seq)) ; keep track of current min
+         index 1] ; keep track of current index iterating
+    (if (= index (count cet-data-map-row-seq)) ; Base Case
+      current-max ; Return current max
+      (if (str/blank? (first data)) ; If the row is blank just skip & recur
+        (recur (rest data) current-max (inc index))
+        (let [row-temp (Integer/parseInt (month (map-record (first data)))) ; Get the current row temp
+              highest-temp (Integer/parseInt (month current-max))] ; Get the highest temp currently
+          (if (= row-temp -999) ; If -999 then it's a N/A value so skip & recur
+            (recur (rest data) current-max (inc index))
+            (if (> row-temp highest-temp) ; If the current row temp is greater than the current tracked highest
+              (recur (rest data) (map-record (first data)) (inc index)) ; Replace the current tracked highest with current row
+              (recur (rest data) current-max (inc index))))))))) ; otherwise recur with rest of seq
 
 ;; Gets the coldest day of all time for given calendar month
 ;; params:
 ;; - month | keyword - relating to a field in the CET data-set mapped record.
 ;; returns: string (date of coldest day along with temperature)
 (defn get-coldest-day-by-month
-  [month]
-  (month (map-record (first cet-data-map-row-seq))))
+  [month] ; current month
+  (loop [data cet-data-map-row-seq ; CET data in seq of rows
+         current-min (map-record (first cet-data-map-row-seq)) ; keep track of current min
+         index 1] ; keep track of current index iterating
+    (if (= index (count cet-data-map-row-seq)) ; Base Case
+      current-min ; Return current min
+      (if (str/blank? (first data)) ; If the row is blank just skip & recur
+        (recur (rest data) current-min (inc index))
+        (let [row-temp (Integer/parseInt (month (map-record (first data)))) ; Get the current row temp
+              lowest-temp (Integer/parseInt (month current-min))] ; Get the lowest temp currently
+          (if (= row-temp -999) ; If -999 then it's a N/A value so skip & recur
+            (recur (rest data) current-min (inc index))
+            (if (< row-temp lowest-temp) ; If the current row temp is less than the current tracked lowest
+              (recur (rest data) (map-record (first data)) (inc index)) ; Replace the current tracked lowest with current row
+              (recur (rest data) current-min (inc index))))))))) ; otherwise recur with rest of seq
+
+(print (count fields))
+
+(defn format-month-name
+  [month-name-as-str]
+  (str/upper-case (subs month-name-as-str 1 4)))
 
 ;; Displays to console the warmest / coldest days
 ;; for each given month throughout the whole of 1772 to present
-(defn display-warmest-coldest-days
+(defn display-warmest-coldest-days-by-month
   []
-  (println "\t\t Warmest \t Coldest")
-  (println (str "January:  \t")
-           (get-warmest-day-by-month :january) "\t\t" (get-coldest-day-by-month :january))
-  (println (str "February:\t")
-           (get-warmest-day-by-month :february) "\t\t" (get-coldest-day-by-month :february))
-  (println (str "March:\t\t")
-           (get-warmest-day-by-month :march) "\t\t" (get-coldest-day-by-month :march))
-  (println (str "April:\t\t")
-           (get-warmest-day-by-month :april) "\t\t" (get-coldest-day-by-month :april))
-  (println (str "May:\t\t")
-           (get-warmest-day-by-month :may) "\t\t" (get-coldest-day-by-month :may))
-  (println (str "June:\t\t")
-           (get-warmest-day-by-month :june) "\t\t" (get-coldest-day-by-month :june))
-  (println (str "July:\t\t")
-           (get-warmest-day-by-month :july) "\t\t" (get-coldest-day-by-month :july))
-  (println (str "August:\t\t")
-           (get-warmest-day-by-month :august) "\t\t" (get-coldest-day-by-month :august))
-  (println (str "September:\t")
-           (get-warmest-day-by-month :september) "\t\t" (get-coldest-day-by-month :september))
-  (println (str "October:\t")
-           (get-warmest-day-by-month :october) "\t\t" (get-coldest-day-by-month :october))
-  (println (str "November:\t")
-           (get-warmest-day-by-month :november) "\t\t" (get-coldest-day-by-month :november))
-  (println (str "December:\t")
-           (get-warmest-day-by-month :december) "\t\t" (get-coldest-day-by-month :december))
+  (println "\nCalculating min & max temperatures for each month since 1772.\nThis may take a minute... Please wait :)\n")
+  (println "MONTH \t\t Coldest \t\t Warmest")
 
-  (println "\nPress enter to return to the menu")
-  (read-line))
+  (loop [index 2]
+    (if (= index (count fields))
+      (println "\nPress enter to return to the menu")
+      (let [current-month (get fields index)
+            warmest (get-warmest-day-by-month current-month)
+            coldest (get-coldest-day-by-month current-month)]
+        (print (format-month-name (str current-month)))
+        (print "\t\t")
+        (print (str (:day coldest) "/" (dec index) "/" (:year coldest)))
+        (print " [")
+        (print (float (/ (Integer/parseInt (current-month coldest)) 10)))
+        (print " C]")
+        (print "\t")
+        (print (str (:day warmest) "/" (dec index) "/" (:year warmest)))
+        (print " [")
+        (print (float (/ (Integer/parseInt (current-month warmest)) 10)))
+        (print " C]")
+        (println)
+
+        (recur (inc index)))))
+
+
+  (read-line)
+  (load-menu))
 
 ;; The main menu for the CET section
 (defn handle-main-menu-choice [user-input]
   (cond
     (= user-input "0") (println "Returning to Main Menu... \n") ; returns to core / main-menu
-    (= user-input "1") (display-warmest-coldest-days)
+    (= user-input "1") (display-warmest-coldest-days-by-month)
     (= user-input "2") ()
     :else ((println "Please enter a valid choice...")
            (load-menu))))
