@@ -3,7 +3,6 @@
             [clojure.string :as str]
             [functional-programming.ascii-to-morse :refer :all]))
 
-
 ;; Testing the ASCII to Morse-Code recursive function
 ;; Assertions include: 
 ;;  - A regular ascii phrase to morse-code conversion
