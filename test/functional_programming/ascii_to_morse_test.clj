@@ -19,7 +19,6 @@
     (is (= (convert-to-morse ascii-string-literal "")  morse-code-equivalent))
     (is (empty? (convert-to-morse empty-input "")))))
 
-
 ;; Testing the Morse-Code to ASCII recursive function
 ;; Assertions include: 
 ;;  - A regular morse-code phrase to ascii conversion

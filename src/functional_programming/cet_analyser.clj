@@ -1,7 +1,6 @@
 (ns functional-programming.cet-analyser
   (:require [clojure.string :as str]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.alpha :as s]))
 
 ;; Declared so can be easily referred back to from any function
 (declare load-menu)
@@ -58,7 +57,6 @@
 (s/fdef parse-row
   :args (s/cat :row ::row)
   :ret ::formatted-row)
-(stest/check `parse-row)
 
 ;; Maps a given post-parsed row to the fields {:year :day :january...} and their respective values
 (defn map-record [row]
