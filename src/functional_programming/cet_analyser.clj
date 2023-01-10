@@ -464,13 +464,15 @@
 
 ;; The main menu for the CET section
 (defn handle-main-menu-choice [user-input]
-  (cond
-    (= user-input "0") (println "Returning to Main Menu... \n") ; returns to core / main-menu
-    (= user-input "1") (display-warmest-coldest-days-by-month)
-    (= user-input "2") (display-warmest-coldest-years)
-    (= user-input "3") (display-mean-per-month-with-variation)
-    :else ((println "Please enter a valid choice...")
-           (load-menu))))
+  (if (nil? user-input)
+    (println "Please enter a valid choice.")
+    (case user-input
+      "0" (println "Returning to Main Menu... \n")
+      "1" (display-warmest-coldest-days-by-month)
+      "2" (display-warmest-coldest-years)
+      "3" (display-mean-per-month-with-variation)
+      :else (println "Please enter a valid choice...")
+      (load-menu))))
 
 (defn load-menu []
   (render-menu)

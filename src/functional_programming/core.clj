@@ -40,18 +40,20 @@
   (load-menu))
 
 ;; The program code main menu
-(defn handle-menu-choice [user-input]
-  (cond
-    (= user-input "0") (shutdown)
-    (= user-input "1") (launch-ascii-program)
-    (= user-input "2") (launch-cet-program)
-    :else ((println "Please enter a valid choice...")
-           (load-menu))))
+(defn handle-main-menu-choice [user-input]
+  (if (nil? user-input)
+    (println "Please enter a valid choice.")
+    (case user-input
+      "0" (println "Returning to Main Menu... \n")
+      "1" (launch-ascii-program)
+      "2" (launch-cet-program)
+      :else (println "Please enter a valid choice...")
+      (load-menu))))
 
 (defn load-menu []
   (render-menu)
   (let [user-input (read-line)]
-    (handle-menu-choice user-input)))
+    (handle-main-menu-choice user-input)))
 
 (defn -main
   []

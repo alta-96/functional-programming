@@ -103,12 +103,14 @@
 
 ;; The main menu for the ASCII/Morse-Code section
 (defn handle-main-menu-choice [user-input]
-  (cond
-    (= user-input "0") (println "Returning to Main Menu... \n") ; returns to core / main-menu
-    (= user-input "1") (ascii-to-morse)
-    (= user-input "2") (morse-to-ascii)
-    :else ((println "Please enter a valid choice...")
-           (load-menu))))
+  (if (nil? user-input)
+    (println "Please enter a valid choice.")
+    (case user-input
+      "0" (println "Returning to Main Menu... \n")
+      "1" (ascii-to-morse)
+      "2" (morse-to-ascii)
+      :else (println "Please enter a valid choice...")
+      (load-menu))))
 
 (defn load-menu []
   (render-menu)
