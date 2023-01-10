@@ -8,9 +8,20 @@
 
 ;; GLobals
 (def fields [:year :day :january :february :march :april :may :june :july :august :september :october :november :december])
+(s/def ::fields (s/coll-of keyword?))
+(s/valid? ::fields fields)
+
 (def start-year 1772)
+(s/def ::start-year int?)
+(s/valid? ::start-year start-year)
+
 (def end-year 2022)
+(s/def ::end-year int?)
+(s/valid? ::end-year end-year)
+
 (def void-temp -999)
+(s/def ::void-temp int?)
+(s/valid? ::void-temp void-temp)
 
 ; Attempt to load the latest CET daily legacy data from 1772 to date into memory
 (def cet-data-map-row-seq
@@ -19,8 +30,6 @@
       (re-seq #".{1,70}" raw-data))
     (catch Exception e
       nil)))
-
-(def test-map [{:year "1772" :day "1" :january "32" :february "15"}])
 
 ;; Prints the menu to console with a nicely formatted title for this program.
 (defn render-menu []
@@ -41,11 +50,31 @@
 (defn parse-row
   [row]
   (str/split (str/trim (str/replace row #" {2,}" " ")) #" "))
+; parse-row spec
+(s/def ::row string?)
+(s/valid? ::row "test")
+(s/def ::formatted-row (s/coll-of string?))
+(s/valid? ::formatted-row (parse-row "this    is    a  test  "))
+(s/fdef parse-row
+  :args (s/cat :row ::row)
+  :ret ::formatted-row)
+(stest/check `parse-row)
 
 ;; Maps a given post-parsed row to the fields {:year :day :january...} and their respective values
 (defn map-record [row]
   (apply hash-map (interleave fields (parse-row row))))
+; map-record spec
+(s/def ::row string?)
+(s/def ::record map?)
+(s/fdef map-record
+  :args (s/cat :row ::row)
+  :ret ::record)
 
+;; Args: - A comparative keyword (:coldest or :warmest)
+;;       - The specified month to compare,
+;;       - pre-formatted rows (map-record)
+;; Returns: Either the coldest or the hottest row depending on
+;; specified comparative.
 (defn compare-temps-by-month
   [comparative month row-1 row-2]
   (let [row-1-temp (Integer/parseInt (month (map-record row-1)))
@@ -61,7 +90,21 @@
       (if (= row-1-temp (max row-1-temp row-2-temp))
         row-1
         row-2))))
+; compare-temps-by-month spec
+(s/def ::comparative keyword?)
+(s/def ::month keyword?)
+(s/def ::row string?)
+(s/fdef compare-temps-by-month
+  :args (s/cat :comparative ::comparative :month ::month :row-1 ::row :row-2 ::row)
+  :ret ::row)
 
+
+;; Args: - A comparative keyword (:coldest or :warmest)
+;; Returns: A map of the warmest/coldest day for every
+;;          month, over the entire CET dataset.
+;;          {:month {:day, :year, :temp}}
+;;          For each of the 12 months, where :temp is either
+;;          the coldest or warmest, depending on the comparative provided.
 (defn get-extremes-by-comparative
   [comparative]
   (loop [data (into [] (remove str/blank? cet-data-map-row-seq))
@@ -119,16 +162,36 @@
              (compare-temps-by-month comparative :october (first data) oct)
              (compare-temps-by-month comparative :november (first data) nov)
              (compare-temps-by-month comparative :december (first data) dec)))))
+; get-extremes-by-comparative spec
+(s/def ::comparative keyword?)
+(s/def ::extremes-map map?)
+(s/fdef compare-temps-by-month
+  :args (s/cat :comparative ::comparative)
+  :ret ::extremes-map)
 
+;; Formats month name into short version.
+;; January becomes JAN, February becomes FEB, etc...
 (defn format-month-name
   [month-name-as-str]
   (str/upper-case (subs month-name-as-str 1 4)))
+; format-month-name spec
+(s/def ::month-name-as-str string?)
+(s/def ::formatted-month string?)
+(s/fdef format-month-name
+  :args (s/cat :month-name-as-str ::month-name-as-str)
+  :ret ::formatted-month)
 
 ;; Returns a year long sequence for a given year
 ;; year 1 = 1772, year 2 = 1773... year 250 = 2022
 (defn get-year-long-seq
   [year]
   (subvec (into [] (remove str/blank? cet-data-map-row-seq)) (* year 31) (* (inc year) 31)))
+; get-year-long-seq spec
+(s/def ::year integer?)
+(s/def ::year-long-subvec vector?)
+(s/fdef get-year-long-seq
+  :args (s/cat :year ::year)
+  :ret ::year-long-subvec)
 
 ;; Displays to console the warmest / coldest days
 ;; for each given month throughout the whole of 1772 to present
@@ -158,25 +221,44 @@
   (read-line)
   (load-menu))
 
+;; Args: - A pre-formatted (mapped-record) row.
+;; Returns: The average temp for that given row.
 (defn avg-row
   [row]
   (loop [index 2
          total 0]
-    (if (= index (count fields))
+    (if (= index (count fields)) ; Base case
       (/ (double (/ total 12)) 10)
       (let [current-temp (Integer/parseInt (get row index))]
         (if (= void-temp current-temp)
           (recur (inc index) total)
           (recur (inc index) (+ total current-temp)))))))
+; avg-row spec
+(s/def ::row map?)
+(s/def ::avg-temp-for-row int?)
+(s/fdef avg-row
+  :args (s/cat :row ::row)
+  :ret ::avg-temp-for-row)
 
+;; Args: - A year long sequence
+;; Returns: The average temp across the 31 days from averages of each row. (the avg for year)
 (defn avg-across-31-days
   [year-long-sequence]
   (loop [index 0
          total 0]
-    (if (= index 31)
+    (if (= index 31) ; Base case
       (double (/ total 31))
       (recur (inc index) (+ total (avg-row (parse-row (get year-long-sequence index))))))))
+; avg-across-31-days spec
+(s/def ::year-long-sequence vector?)
+(s/def ::avg-temp-for-year int?)
+(s/fdef avg-across-31-days
+  :args (s/cat :year-long-sequence ::year-long-sequence)
+  :ret ::avg-temp-for-year)
 
+;; Args: - year-min - the starting year
+;;       - year-max - the ending year
+;; Returns: The warmest year between the provided year-min and year-max
 (defn get-warmest-year
   [year-min year-max]
   (loop
@@ -184,13 +266,22 @@
     highest-temp-year year-min
     highest-temp 1
     seq-tracker 0]
-    (if (> current-year year-max)
+    (if (> current-year year-max) ; Base case
       {:year highest-temp-year :mean-temp (format "%.2f" highest-temp)}
       (let [current-year-total-temp (avg-across-31-days (get-year-long-seq seq-tracker))]
         (if (> current-year-total-temp highest-temp)
           (recur (inc current-year) current-year current-year-total-temp (inc seq-tracker))
           (recur (inc current-year) highest-temp-year highest-temp (inc seq-tracker)))))))
+; get-warmest-year spec
+(s/def ::year int?)
+(s/def ::warmest-year-info map?)
+(s/fdef get-warmest-year
+  :args (s/cat :year-min ::year :year-max ::year)
+  :ret ::warmest-year-info)
 
+;; Args: - year-min - the starting year
+;;       - year-max - the ending year
+;; Returns: The coldest year between the provided year-min and year-max
 (defn get-coldest-year
   [year-min year-max]
   (loop
@@ -204,7 +295,14 @@
         (if (< current-year-total-temp lowest-temp)
           (recur (inc current-year) current-year current-year-total-temp (inc seq-tracker))
           (recur (inc current-year) lowest-temp-year lowest-temp (inc seq-tracker)))))))
+; get-coldest-year spec
+(s/def ::year int?)
+(s/def ::coldest-year-info map?)
+(s/fdef get-warmest-year
+  :args (s/cat :year-min ::year :year-max ::year)
+  :ret ::coldest-year-info)
 
+;; Prints the warmest & coldest years to console
 (defn display-warmest-coldest-years
   []
   (print "The Record Mean Warmest year from 1772 to 2022 is: ")
@@ -243,13 +341,14 @@
   (load-menu))
 
 ;; Gets the specified month average for a given year-long-seq (year block)
-;; Returns the year of that sequence and the average
+;; Args: - month - keyword of month
+;;       - year-long-seq - vector comprising of 31 rows (a year block)
+;; Returns: The year of that sequence and the average for the specified month
 (defn avg-across-31-days-by-month
   [month year-long-seq]
   (loop
    [remaining-mls year-long-seq
     running-total-for-month 0]
-
     (if (empty? remaining-mls)
       {:year (:year (map-record (first year-long-seq)))
        :month-avg (/ (double (/ running-total-for-month 31)) 10)}
@@ -258,27 +357,54 @@
         (if (= temp void-temp) ; account for -999 results
           (recur (rest remaining-mls) (+ running-total-for-month 0))
           (recur (rest remaining-mls) (+ running-total-for-month temp)))))))
+; avg-across-31-days-by-month spec
+(s/def ::month keyword?)
+(s/def ::year-long-seq vector?)
+(s/def ::avg-for-given-month-across-year map?)
+(s/fdef avg-across-31-days-by-month
+  :args (s/cat :month ::month :year-long-seq ::year-long-seq)
+  :ret ::avg-for-given-month-across-year)
 
-(def mls (get-year-long-seq 1))
-(avg-across-31-days-by-month :march mls)
-
-(empty? (rest mls))
-
-
+;; Args: - current-smallest - int of current smallest temp
+;;       - contending-new-smallest - int of a temp to compare to current-smallest
+;; Returns: The smallest temp of the two
 (defn get-new-month-smallest
   [current-smallest
    contending-new-smallest]
   (if (= (:month-avg contending-new-smallest) (min (:month-avg current-smallest) (:month-avg contending-new-smallest)))
     contending-new-smallest
     current-smallest))
+; get-new-month-smallest spec
+(s/def ::temp int?)
+(s/fdef get-new-month-smallest
+  :args (s/cat :current-smallest ::temp :comtending-new-smallest ::temp)
+  :ret ::temp)
 
+;; Args: - current-largest - int of current largest temp
+;;       - contending-new-largest - int of a temp to compare to current-largest
+;; Returns: The largest temp of the two
 (defn get-new-month-largest
   [current-largest
    contending-new-largest]
   (if (= (:month-avg contending-new-largest) (max (:month-avg current-largest) (:month-avg contending-new-largest)))
     contending-new-largest
     current-largest))
+; get-new-month-largest spec
+(s/def ::temp int?)
+(s/fdef get-new-month-largest
+  :args (s/cat :current-largest ::temp :comtending-new-largest ::temp)
+  :ret ::temp)
 
+;; Iterates through the CET dataset by year...
+;; Calculates the average across all years for a given month,
+;; Also finds the smallest average and greatest average variance year for the same month.
+;; Args: - month - keyword of month to find avgs & variance avgs for
+;; Returns: Map of data consisting of:
+;; mean-temp - the mean temp across the entire CET dataset for the given month
+;; smallest-variation - the smallest variation of mean-temp average
+;; smallest-instance - the year at which this smallest variation is from
+;; largest-variation - the largest variation of mean-temp average
+;; largest-instance - the year at which this largest variation is from
 (defn get-mean-temp-by-month
   [month]
   (loop
@@ -304,7 +430,14 @@
              (:year new-smallest)
              (:month-avg new-largest)
              (:year new-largest))))))))
+; get-new-month-largest spec
+(s/def ::month keyword?)
+(s/def ::avg-with-variance-for-month map?)
+(s/fdef get-mean-temp-by-month
+  :args (s/cat :month ::month)
+  :ret ::avg-with-variance-for-month)
 
+;; Displays the mean along with its smallest & largest variance for each month to console.
 (defn display-mean-per-month-with-variation
   []
   (println "\nCalculating mean temperatures for each month since 1772.\nThis may take a minute... Please wait :)\n")
