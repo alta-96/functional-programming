@@ -8,8 +8,10 @@
 ;;  - An empty input conversion
 (deftest test-parse-row
   ; Arrange
-  (def sample-input "      this    is    a test  ")
-  (def expected-output ["this" "is" "a" "test"])
+  (def 
+    sample-input "      this    is    a test  ")
+  (def 
+    expected-output ["this" "is" "a" "test"])
 
   ; Act & Assert
   (testing "parse-row appropriately parses the string into a sequence and handles empty input"
@@ -21,9 +23,12 @@
 ;;  - A valid input is mapped correctly into the expected map and can be indexed by keyword
 (deftest test-map-record
   ; Arrange
-  (def sample-row " 1772    1   32  -15   18   25   87  128  187  177  105  111   78  112     ")
-  (def expected-january-temperature "32")
-  (def expected-september-temperature "105")
+  (def 
+    sample-row " 1772    1   32  -15   18   25   87  128  187  177  105  111   78  112     ")
+  (def 
+    expected-january-temperature "32")
+  (def 
+    expected-september-temperature "105")
 
   ; Act & Assert
   (testing "map-record maps the row as expected and can be indexed properly"

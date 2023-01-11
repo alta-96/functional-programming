@@ -53,7 +53,7 @@
 (s/def ::row string?)
 (s/valid? ::row "test")
 (s/def ::formatted-row (s/coll-of string?))
-(s/valid? ::formatted-row (parse-row "this    is    a  test  "))
+(s/valid? ::formatted-row (parse-row "    this    is    a  test  "))
 (s/fdef parse-row
   :args (s/cat :row ::row)
   :ret ::formatted-row)

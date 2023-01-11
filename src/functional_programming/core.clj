@@ -44,7 +44,7 @@
   (if (nil? user-input)
     (println "Please enter a valid choice.")
     (case user-input
-      "0" (println "Returning to Main Menu... \n")
+      "0" (shutdown)
       "1" (launch-ascii-program)
       "2" (launch-cet-program)
       :else (println "Please enter a valid choice...")

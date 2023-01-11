@@ -9,9 +9,12 @@
 ;;  - An empty input conversion
 (deftest test-convert-to-morse
   ; Arrange
-  (def ascii-string-literal (str "THIS IS A TEST" terminating-char))
-  (def morse-code-equivalent "-   ....   ..   ...       ..   ...       .-       -   .   ...   -")
-  (def empty-input (str "" terminating-char))
+  (def 
+    ascii-string-literal (str "THIS IS A TEST" terminating-char))
+  (def 
+    morse-code-equivalent "-   ....   ..   ...       ..   ...       .-       -   .   ...   -")
+  (def 
+    empty-input (str "" terminating-char))
 
   ; Act & Assert
   (testing "The conversion of an ASCII string literal to Morse-Code"
@@ -24,9 +27,12 @@
 ;;  - An empty input conversion
 (deftest test-convert-to-ascii
   ; Arrange
-  (def morse-string-literal (str "-   ....   ..   ...       ..   ...       .-       -   .   ...   -"  morse-char-spacing terminating-char))
-  (def ascii-code-equivalent "THIS IS A TEST")
-  (def empty-input (str ""  morse-char-spacing terminating-char))
+  (def 
+    morse-string-literal (str "-   ....   ..   ...       ..   ...       .-       -   .   ...   -"  morse-char-spacing terminating-char))
+  (def 
+    ascii-code-equivalent "THIS IS A TEST")
+  (def 
+    empty-input (str ""  morse-char-spacing terminating-char))
 
   ; Act & Assert
   (testing "The conversion of a Morse-Code string to ASCII string literal"
